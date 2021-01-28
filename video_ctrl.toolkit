@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<toolkit
+        name="video_ctrl"
+        displayName="Video Toolkit (Beta)"
+        addMenuItem="true"
+        >
+		<startupScript>video_ctrl.tcl</startupScript>
+    <file>video_ctrl.tcl</file>
+		<description>The ADC Toolkit allows for the evaluation of ADC signal path performance.</description>
+</toolkit>
