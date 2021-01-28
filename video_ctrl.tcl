@@ -1,5 +1,3 @@
-# toolkit_register C:\\cygwin64\\home\\bolnov\\system_console\\scripts\\video_ctrl.toolkit
-
 package provide video_ctrl 0.1
 package require Tcl 8.5
 
