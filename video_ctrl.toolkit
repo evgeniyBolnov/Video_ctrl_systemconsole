@@ -6,5 +6,5 @@
         >
 		<startupScript>video_ctrl.tcl</startupScript>
     <file>video_ctrl.tcl</file>
-		<description>The ADC Toolkit allows for the evaluation of ADC signal path performance.</description>
+		<description>Toolkit allows to change parameters of Intel Video IP Cores</description>
 </toolkit>
