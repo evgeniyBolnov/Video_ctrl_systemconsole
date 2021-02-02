@@ -297,6 +297,77 @@ namespace eval ::video_ctrl {
 
               toolkit_add MixSelectedLayerAlphaText textField MixSelectedLayerAlphaGroup {minWidth 80}
                 toolkit_set_property MixSelectedLayerAlphaText text "0x0"
+
+#############################################################################################
+  toolkit_add ScalerTab group TABS {expandableX true expandableY true itemsPerRow 3}
+    toolkit_set_property ScalerTab title "Scaler"
+
+      toolkit_add  ScalerParametersGroup group ScalerTab {itemsPerRow 1 minWidth 120}
+        toolkit_set_property ScalerParametersGroup title "Parameters"
+
+          toolkit_add  ScalerBaseAddrGroup group ScalerParametersGroup {expandableX true itemsPerRow 1 minWidth 120}
+            toolkit_set_property ScalerBaseAddrGroup title "Scaler Base Address"
+
+              toolkit_add  ScalerBaseAddressText textField ScalerBaseAddrGroup
+                toolkit_set_property ScalerBaseAddressText minWidth $control_width
+                toolkit_set_property ScalerBaseAddressText text 0x200
+
+          toolkit_add  ScalerButtonsGroup group ScalerParametersGroup {expandableX true itemsPerRow 2 minWidth 120}
+            toolkit_set_property ScalerButtonsGroup title "Operation"
+
+              toolkit_add ScalerReadButton button ScalerButtonsGroup
+                toolkit_set_property ScalerReadButton text "Read"
+                toolkit_set_property ScalerReadButton onClick "::video_ctrl::ScalerReadButton_onClick"
+
+              toolkit_add ScalerWriteButton button ScalerButtonsGroup
+                toolkit_set_property ScalerWriteButton text "Write"
+                toolkit_set_property ScalerWriteButton onClick "::video_ctrl::ScalerWriteButton_onClick"
+
+      toolkit_add  ScalerRegistersGroup group ScalerTab {itemsPerRow 1 minWidth 120}
+        toolkit_set_property ScalerRegistersGroup title "Scaler registers"
+
+          toolkit_add  ScalerControlGroup group ScalerRegistersGroup {expandableX true itemsPerRow 3 minWidth 120}
+            toolkit_set_property ScalerControlGroup title "Scaler Control"
+
+              toolkit_add ScalerControlText textField ScalerControlGroup {minWidth 80}
+                toolkit_set_property ScalerControlText text "0x0"
+
+              toolkit_add ScalerControlLed led ScalerControlGroup
+                toolkit_set_property ScalerControlLed text "Go"
+                toolkit_set_property ScalerControlLed color green_off
+
+              toolkit_add ScalerCoeffSelectio0nLed led ScalerControlGroup
+                toolkit_set_property ScalerCoeffSelectio0nLed text "Edge adaptive coefficient selection"
+                toolkit_set_property ScalerCoeffSelectio0nLed color green_off
+
+          toolkit_add  ScalerStatusGroup group ScalerRegistersGroup {expandableX true itemsPerRow 2 minWidth 120}
+            toolkit_set_property ScalerStatusGroup title "Scaler Status"
+
+              toolkit_add ScalerStatusText textField ScalerStatusGroup {minWidth 80}
+                toolkit_set_property ScalerStatusText text "0x0"
+                toolkit_set_property ScalerStatusText editable false
+
+              toolkit_add ScalerStatusLed led ScalerStatusGroup
+                toolkit_set_property ScalerStatusLed text "Status"
+                toolkit_set_property ScalerStatusLed color green_off
+
+          toolkit_add  ScalerWidthGroup group ScalerRegistersGroup {expandableX true itemsPerRow 2 minWidth 120}
+            toolkit_set_property ScalerWidthGroup title "Scaler Output Width"
+
+              toolkit_add ScalerWidthText textField ScalerWidthGroup {minWidth 80}
+                toolkit_set_property ScalerWidthText text "0x0"
+
+              toolkit_add ScalerWidthDecText label ScalerWidthGroup {minWidth 80}
+                toolkit_set_property ScalerWidthDecText text "0"
+
+          toolkit_add  ScalerHeightGroup group ScalerRegistersGroup {expandableX true itemsPerRow 2 minWidth 120}
+            toolkit_set_property ScalerHeightGroup title "Scaler Output Height"
+
+              toolkit_add ScalerHeightText textField ScalerHeightGroup {minWidth 80}
+                toolkit_set_property ScalerHeightText text "0x0"
+
+              toolkit_add ScalerHeightDecText label ScalerHeightGroup {minWidth 80}
+                toolkit_set_property ScalerHeightDecText text "0"
 }
 
 proc ::video_ctrl::CVIReadButton_onClick {} {
@@ -485,4 +556,45 @@ proc ::video_ctrl::MixWriteButton_onClick {} {
   master_write_32 $claim_path [expr {[toolkit_get_property MixBaseAddressText text] + (11 * 4) + $LayerOffset}] [toolkit_get_property MixSelectedLayerPositionText text]
   master_write_32 $claim_path [expr {[toolkit_get_property MixBaseAddressText text] + (12 * 4) + $LayerOffset}] [toolkit_get_property MixSelectedLayerAlphaText text]
   ::video_ctrl::MixReadButton_onClick
+}
+
+proc ::video_ctrl::ScalerReadButton_onClick {} {
+  variable claim_path
+  set read_control [master_read_32 $claim_path [expr {[toolkit_get_property ScalerBaseAddressText text] + (0 * 4)}] 1]
+  if [expr {($read_control & 0x1) == 0x1}] {
+    set control_go_led green
+  } else {
+    set control_go_led green_off
+  }  
+  toolkit_set_property ScalerControlText text $read_control
+  toolkit_set_property ScalerControlLed color $control_go_led
+  set read_status [master_read_32 $claim_path [expr {[toolkit_get_property ScalerBaseAddressText text] + (1 * 4)}] 1]
+  if [expr {($read_status & 0x1) == 0x1}] {
+    set status_go_led green
+  } else {
+    set status_go_led green_off
+  }  
+  toolkit_set_property ScalerStatusText text $read_status
+  toolkit_set_property ScalerStatusLed color $status_go_led
+  set Width  [master_read_32 $claim_path [expr {[toolkit_get_property ScalerBaseAddressText text] + (3 * 4)}] 1]
+  set Height [master_read_32 $claim_path [expr {[toolkit_get_property ScalerBaseAddressText text] + (4 * 4)}] 1]  
+  toolkit_set_property ScalerWidthText  text $Width
+  toolkit_set_property ScalerHeightText text $Height
+  toolkit_set_property ScalerWidthDecText  text [hex2dec $Width] 
+  toolkit_set_property ScalerHeightDecText text [hex2dec $Height] 
+}
+
+proc ::video_ctrl::ScalerWriteButton_onClick {} {
+  variable claim_path
+  master_write_32 $claim_path [       toolkit_get_property ScalerBaseAddressText text]             [toolkit_get_property ScalerControlText text]
+  master_write_32 $claim_path [expr {[toolkit_get_property ScalerBaseAddressText text] + (1 * 4)}] [toolkit_get_property ScalerStatusText  text]
+  master_write_32 $claim_path [expr {[toolkit_get_property ScalerBaseAddressText text] + (3 * 4)}] [toolkit_get_property ScalerWidthText   text]
+  master_write_32 $claim_path [expr {[toolkit_get_property ScalerBaseAddressText text] + (4 * 4)}] [toolkit_get_property ScalerHeightText  text]
+  ::video_ctrl::ScalerReadButton_onClick
+}
+
+
+proc hex2dec {largeHex} {
+  scan $largeHex %x decimal
+  return $decimal
 }
